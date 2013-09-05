@@ -22,9 +22,6 @@ process.stdin.on('keypress', function(ch, key){
     console.log("exit")
     process.exit()
   }
-  if(key.name == "m"){
-    console.log("========================")
-  }
 })
 process.stdin.setRawMode(true);
 process.stdin.resume()
