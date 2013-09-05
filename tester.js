@@ -1,12 +1,3 @@
-node-keyupdown
-==============
-
-emulate keyup and keydown on nodejs.
-
-
-## Sample
-
-```javascript
 var keydownup = require("./keyemulator")
 keydownup(process.stdin)
 
@@ -28,4 +19,3 @@ process.stdin.on('keypress', function(ch, key){
 })
 process.stdin.setRawMode(true);
 process.stdin.resume()
-```

@@ -4,68 +4,58 @@ var keypress = require("keypress")
 
 var pressed = false
 var lastPressed = 0
+var keypressCount = 0
+var immediateRpeat = 0 // for debug
+var uptime = 100
 
-var timers = []
-function clearTimers(){
-  timers.forEach(function(timer){
-    clearTimeout(timer)
-  })
-  timers = []
-}
+var Log = require('log')
+var logLevel = "info"
+var log = new Log(logLevel)
 
-function keydownup(stream, interval){
-  if(interval == undefined){
-    interval = 120
-  }
+function keydownup(stream){
+  // keypress handling
   kp = keypress(stream)
   stream.on('keypress', function(ch, key){
-    var d = new Date()
-    lastPressed = d.getTime()
-
     if(pressed == false){
-      stream.emit('keydown')
+      stream.emit('keydown', ch, key)
     }
+    var d = new Date()
     pressed = true
+    var beforeLastPressed = lastPressed
+    lastPressed = d.getTime()
+    keypressCount++
   })
-
-  var checkKeyup = function(){
+  
+  // immediate
+  function _onImmediate(){
     if(pressed == false){
       return
     }
-    var i = new Date().getTime() - lastPressed
-    var isKeyPressed = (i > interval)
-    console.log(i)
-    if(isKeyPressed && pressed){
+    var current = new Date()
+    var interval = current.getTime() - lastPressed
+    if(immediateRpeat % 10000 == 0){
+      log.debug(interval,keypressCount)
+    }
+    var threshold = uptime
+    // skip first time
+    if(keypressCount == 1){
+      threshold = threshold * 2
+    }
+    if(interval > threshold){
+      log.debug(interval)
       pressed = false
       stream.emit('keyup')
-      clearTimers()
-    }
-  }
-  var timerFunc = function(){
-    checkKeyup()
-    var t = setTimeout(function(){
-      timerFunc()
-    }, interval / 2)
-    timers.push(t)
-  }
-  var timer = setTimeout(function(){
-    timerFunc()
-  }, interval / 2)
-  timers.push(timer)
-}
-keydownup(process.stdin)
+      keypressCount = 0
 
-process.stdin.on('keydown', function(){
-  console.log("keydown")
-})
-process.stdin.on('keyup', function(){
-  console.log("keyup")
-})
-process.stdin.on('keypress', function(ch, key){
-  if(key && key.name == "c" && key.ctrl){
-    console.log("exit")
-    process.exit()
+    }
+    immediateRpeat++ // for debug
   }
-})
-process.stdin.setRawMode(true);
-process.stdin.resume()
+
+  function onImmediate(){
+    _onImmediate()
+    setImmediate(onImmediate)
+  }
+  setImmediate(onImmediate)
+
+}
+module.exports = keydownup
