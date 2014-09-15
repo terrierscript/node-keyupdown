@@ -7,7 +7,7 @@ emulate keyup and keydown on nodejs.
 ## Sample
 
 ```javascript
-var keydownup = require("./keyemulator")
+var keydownup = require("./index")
 keydownup(process.stdin)
 
 process.stdin.on('keydown', function(){
